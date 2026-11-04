@@ -1,0 +1,25 @@
+name: Pull request checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Actions workflow YAML
+        run: |
+          ruby -ryaml -e 'Dir.glob(".github/workflows/*.{yml,yaml}").each { |f| YAML.load_file(f); puts "ok #{f}" }'
+      - name: Check shell script syntax
+        shell: bash
+        run: |
+          while IFS= read -r -d '' script; do
+            bash -n "$script"
+          done < <(find . -type f -name '*.sh' -print0)
+      - name: Whitespace errors
+        run: git diff --check
